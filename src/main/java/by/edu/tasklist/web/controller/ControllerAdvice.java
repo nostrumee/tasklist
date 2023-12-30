@@ -1,9 +1,9 @@
 package by.edu.tasklist.web.controller;
 
 import by.edu.tasklist.domain.exception.AccessDeniedException;
-import by.edu.tasklist.web.dto.error.ErrorResponse;
 import by.edu.tasklist.domain.exception.ResourceMappingException;
 import by.edu.tasklist.domain.exception.ResourceNotFoundException;
+import by.edu.tasklist.web.dto.error.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
@@ -93,7 +93,7 @@ public class ControllerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleAuthentication(AuthenticationException e) {
         return ErrorResponse.builder()
-                .message("Authentication failed.")
+                .message(e.getMessage())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .build();
     }

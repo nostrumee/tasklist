@@ -1,7 +1,6 @@
 package by.edu.tasklist.service;
 
 import by.edu.tasklist.domain.user.User;
-import org.springframework.transaction.annotation.Transactional;
 
 public interface UserService {
 
