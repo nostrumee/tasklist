@@ -1,11 +1,13 @@
 package by.edu.tasklist.web.dto.task;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
-public record TaskImageDto(
+@Data
+public class TaskImageDto {
 
-        @NotNull(message = "Image must be not null.")
-        MultipartFile file
-) {
+    @NotNull(message = "Image must be not null.")
+    private MultipartFile file;
+
 }

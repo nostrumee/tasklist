@@ -24,13 +24,14 @@ public class ImageServiceImpl implements ImageService {
     private final MinioProperties minioProperties;
 
     @Override
-    public String upload(TaskImage image) {
+    public String upload(final TaskImage image) {
         try {
             createBucket();
         } catch (Exception e) {
-            throw new ImageUploadException("Image upload failed: " + e.getMessage());
+            throw new ImageUploadException("Image upload failed: "
+                    + e.getMessage());
         }
-        MultipartFile file = image.file();
+        MultipartFile file = image.getFile();
         if (file.isEmpty() || file.getOriginalFilename() == null) {
             throw new ImageUploadException("Image must have name.");
         }
@@ -39,7 +40,8 @@ public class ImageServiceImpl implements ImageService {
         try {
             inputStream = file.getInputStream();
         } catch (Exception e) {
-            throw new ImageUploadException("Image upload failed: " + e.getMessage());
+            throw new ImageUploadException("Image upload failed: "
+                    + e.getMessage());
         }
         saveImage(inputStream, fileName);
         return fileName;
@@ -57,22 +59,24 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private String generateFileName(MultipartFile file) {
+    private String generateFileName(final MultipartFile file) {
         String extension = getExtension(file);
         return UUID.randomUUID() + "." + extension;
     }
 
-    private String getExtension(MultipartFile file) {
+    private String getExtension(final MultipartFile file) {
         return file.getOriginalFilename()
                 .substring(file.getOriginalFilename().lastIndexOf(".") + 1);
     }
 
     @SneakyThrows
-    private void saveImage(InputStream inputStream, String fileName) {
+    private void saveImage(final InputStream inputStream,
+                           final String fileName) {
         minioClient.putObject(PutObjectArgs.builder()
                 .stream(inputStream, inputStream.available(), -1)
                 .bucket(minioProperties.getBucket())
                 .object(fileName)
                 .build());
     }
+
 }

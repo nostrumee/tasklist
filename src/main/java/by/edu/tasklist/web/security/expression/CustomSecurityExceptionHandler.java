@@ -18,7 +18,8 @@ public class CustomSecurityExceptionHandler
 
     @Override
     protected MethodSecurityExpressionOperations createSecurityExpressionRoot(
-            Authentication authentication, MethodInvocation invocation
+            final Authentication authentication,
+            final MethodInvocation invocation
     ) {
         CustomMethodSecurityExpressionRoot root
                 = new CustomMethodSecurityExpressionRoot(authentication);

@@ -1,9 +1,10 @@
 package by.edu.tasklist.web.controller;
 
 import by.edu.tasklist.domain.exception.AccessDeniedException;
+import by.edu.tasklist.domain.exception.ExceptionBody;
+import by.edu.tasklist.domain.exception.ImageUploadException;
 import by.edu.tasklist.domain.exception.ResourceMappingException;
 import by.edu.tasklist.domain.exception.ResourceNotFoundException;
-import by.edu.tasklist.web.dto.error.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
@@ -13,99 +14,85 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ControllerAdvice {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleResourceNotFound(ResourceNotFoundException e) {
-        return ErrorResponse.builder()
-                .message(e.getMessage())
-                .status(HttpStatus.NOT_FOUND.value())
-                .build();
+    public ExceptionBody handleResourceNotFound(
+            final ResourceNotFoundException e
+    ) {
+        return new ExceptionBody(e.getMessage());
     }
 
     @ExceptionHandler(ResourceMappingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleResourceMapping(ResourceMappingException e) {
-        return ErrorResponse.builder()
-                .message(e.getMessage())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .build();
+    public ExceptionBody handleResourceMapping(
+            final ResourceMappingException e
+    ) {
+        return new ExceptionBody(e.getMessage());
     }
 
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIllegalState(IllegalStateException e) {
-        return ErrorResponse.builder()
-                .message(e.getMessage())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .build();
+    public ExceptionBody handleIllegalState(final IllegalStateException e) {
+        return new ExceptionBody(e.getMessage());
     }
 
     @ExceptionHandler({AccessDeniedException.class,
             org.springframework.security.access.AccessDeniedException.class})
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorResponse handleAccessDenied() {
-        return ErrorResponse.builder()
-                .message("Access denied.")
-                .status(HttpStatus.FORBIDDEN.value())
-                .build();
+    public ExceptionBody handleAccessDenied() {
+        return new ExceptionBody("Access denied.");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
-        var errors = new HashMap<String, String>();
-        e.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-
-        return ErrorResponse.builder()
-                .message("Validation failed.")
-                .errors(errors)
-                .status(HttpStatus.BAD_REQUEST.value())
-                .build();
+    public ExceptionBody handleMethodArgumentNotValid(
+            final MethodArgumentNotValidException e
+    ) {
+        ExceptionBody exceptionBody = new ExceptionBody("Validation failed.");
+        List<FieldError> errors = e.getBindingResult().getFieldErrors();
+        exceptionBody.setErrors(errors.stream()
+                .collect(Collectors.toMap(FieldError::getField,
+                        FieldError::getDefaultMessage)));
+        return exceptionBody;
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleConstraintViolation(ConstraintViolationException e) {
-        var errors = new HashMap<String, String>();
-        e.getConstraintViolations().forEach(error -> {
-            String fieldName = error.getPropertyPath().toString();
-            String errorMessage = error.getMessage();
-            errors.put(fieldName, errorMessage);
-        });
-
-        return ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .message("Validation failed.")
-                .errors(errors)
-                .build();
+    public ExceptionBody handleConstraintViolation(
+            final ConstraintViolationException e
+    ) {
+        ExceptionBody exceptionBody = new ExceptionBody("Validation failed.");
+        exceptionBody.setErrors(e.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        violation -> violation.getPropertyPath().toString(),
+                        violation -> violation.getMessage()
+                )));
+        return exceptionBody;
     }
 
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleAuthentication(AuthenticationException e) {
-        return ErrorResponse.builder()
-                .message(e.getMessage())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .build();
+    public ExceptionBody handleAuthentication(final AuthenticationException e) {
+        return new ExceptionBody("Authentication failed.");
     }
 
+    @ExceptionHandler(ImageUploadException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionBody handleImageUpload(final ImageUploadException e) {
+        return new ExceptionBody(e.getMessage());
+    }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleException(Exception e) {
+    public ExceptionBody handleException(final Exception e) {
         e.printStackTrace();
-        return ErrorResponse.builder()
-                .message("Internal error.")
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .build();
+        return new ExceptionBody("Internal error.");
     }
+
 }

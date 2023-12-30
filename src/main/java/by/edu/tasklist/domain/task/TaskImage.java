@@ -1,8 +1,11 @@
 package by.edu.tasklist.domain.task;
 
+import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
-public record TaskImage(
-        MultipartFile file
-) {
+@Data
+public class TaskImage {
+
+    private MultipartFile file;
+
 }

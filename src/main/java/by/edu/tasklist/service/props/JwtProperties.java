@@ -1,11 +1,16 @@
 package by.edu.tasklist.service.props;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
+@Component
+@Data
 @ConfigurationProperties(prefix = "security.jwt")
-public record JwtProperties(
-        String secret,
-        long access,
-        long refresh
-) {
+public class JwtProperties {
+
+    private String secret;
+    private long access;
+    private long refresh;
+
 }

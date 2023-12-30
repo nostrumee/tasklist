@@ -23,4 +23,5 @@ public class GraphqlConfig {
                 .scalar(localDateTimeScalar())
                 .build();
     }
+
 }

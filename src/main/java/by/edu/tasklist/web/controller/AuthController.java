@@ -5,11 +5,10 @@ import by.edu.tasklist.service.AuthService;
 import by.edu.tasklist.service.UserService;
 import by.edu.tasklist.web.dto.auth.JwtRequest;
 import by.edu.tasklist.web.dto.auth.JwtResponse;
-import by.edu.tasklist.web.dto.mapper.UserMapper;
 import by.edu.tasklist.web.dto.user.UserDto;
-import by.edu.tasklist.web.validation.OnCreate;
+import by.edu.tasklist.web.dto.validation.OnCreate;
+import by.edu.tasklist.web.mappers.UserMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Auth Controller", description = "Auth API")
 public class AuthController {
 
@@ -29,19 +29,22 @@ public class AuthController {
     private final UserMapper userMapper;
 
     @PostMapping("/login")
-    public JwtResponse login(@Valid @RequestBody JwtRequest loginRequest) {
+    public JwtResponse login(@Validated
+                             @RequestBody final JwtRequest loginRequest) {
         return authService.login(loginRequest);
     }
 
     @PostMapping("/register")
-    public UserDto register(@Validated(OnCreate.class) @RequestBody UserDto userDto) {
+    public UserDto register(@Validated(OnCreate.class)
+                            @RequestBody final UserDto userDto) {
         User user = userMapper.toEntity(userDto);
         User createdUser = userService.create(user);
         return userMapper.toDto(createdUser);
     }
 
     @PostMapping("/refresh")
-    public JwtResponse refresh(@RequestBody String refreshToken) {
+    public JwtResponse refresh(@RequestBody final String refreshToken) {
         return authService.refresh(refreshToken);
     }
+
 }

@@ -1,5 +1,9 @@
 version: '3'
 
+networks:
+  app-network:
+    driver: bridge
+
 volumes:
   cache:
     driver: local
@@ -9,38 +13,42 @@ volumes:
     driver: local
 
 services:
+  app:
+    build:
+      context: .
+    container_name: tasklist
+    networks:
+      - app-network
+    depends_on:
+      - db
+      - minio
+      - redis
+    env_file:
+      - .env.docker
+    ports:
+      - '8080:8080'
+
   db:
     image: postgres:15.1-alpine
     container_name: postgres
+    networks:
+      - app-network
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=tasklist
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DATABASE}
     ports:
       - '5432:5432'
     volumes:
       - ./src/main/resources/db-init:/docker-entrypoint-initdb.d
       - db-data:/var/lib/postgresql/data
 
-  app:
-    build:
-      context: .
-    container_name: tasklist
-    depends_on:
-      - db
-      - redis
-      - minio
-    env_file:
-      - .env.docker
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    ports:
-      - '8080:8080'
-
   redis:
     image: redis:7.2-rc-alpine
     restart: always
     container_name: redis
+    networks:
+      - app-network
     ports:
       - '6379:6379'
     command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
@@ -50,6 +58,8 @@ services:
   minio:
     image: minio/minio:latest
     container_name: minio
+    networks:
+      - app-network
     environment:
       - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
       - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}

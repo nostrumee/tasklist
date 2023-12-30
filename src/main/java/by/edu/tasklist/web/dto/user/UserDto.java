@@ -1,45 +1,47 @@
 package by.edu.tasklist.web.dto.user;
 
-import by.edu.tasklist.web.validation.OnCreate;
-import by.edu.tasklist.web.validation.OnUpdate;
+import by.edu.tasklist.web.dto.validation.OnCreate;
+import by.edu.tasklist.web.dto.validation.OnUpdate;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
+@Data
 @Schema(description = "User DTO")
-public record UserDto(
+public class UserDto {
 
-        @Schema(description = "User id", example = "1")
-        @NotNull(message = "Id must be not null.", groups = OnUpdate.class)
-        Long id,
+    @Schema(description = "User id", example = "1")
+    @NotNull(message = "Id must be not null.", groups = OnUpdate.class)
+    private Long id;
 
-        @Schema(description = "User name", example = "John Doe")
-        @NotNull(message = "Name must be not null.",
-                groups = {OnCreate.class, OnUpdate.class})
-        @Length(max = 255,
-                message = "Name length must be smaller than 255 symbols.",
-                groups = {OnCreate.class, OnUpdate.class})
-        String name,
+    @Schema(description = "User name", example = "John Doe")
+    @NotNull(message = "Name must be not null.",
+            groups = {OnCreate.class, OnUpdate.class})
+    @Length(max = 255,
+            message = "Name length must be smaller than 255 symbols.",
+            groups = {OnCreate.class, OnUpdate.class})
+    private String name;
 
-        @Schema(description = "User email", example = "johndoe@gmail.com")
-        @NotNull(message = "Username must be not null.",
-                groups = {OnCreate.class, OnUpdate.class})
-        @Length(max = 255,
-                message = "Username length must be smaller than 255 symbols.",
-                groups = {OnCreate.class, OnUpdate.class})
-        String username,
+    @Schema(description = "User email", example = "johndoe@gmail.com")
+    @NotNull(message = "Username must be not null.",
+            groups = {OnCreate.class, OnUpdate.class})
+    @Length(max = 255,
+            message = "Username length must be smaller than 255 symbols.",
+            groups = {OnCreate.class, OnUpdate.class})
+    private String username;
 
-        @Schema(description = "User crypted password")
-        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        @NotNull(message = "Password must be not null.",
-                groups = {OnCreate.class, OnUpdate.class})
-        String password,
+    @Schema(description = "User crypted password")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotNull(message = "Password must be not null.",
+            groups = {OnCreate.class, OnUpdate.class})
+    private String password;
 
-        @Schema(description = "User password confirmation")
-        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        @NotNull(message = "Password confirmation must be not null.",
-                groups = {OnCreate.class})
-        String passwordConfirmation
-) {
+    @Schema(description = "User password confirmation")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotNull(message = "Password confirmation must be not null.",
+            groups = {OnCreate.class})
+    private String passwordConfirmation;
+
 }

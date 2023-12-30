@@ -1,12 +1,13 @@
 package by.edu.tasklist.web.dto.auth;
 
-import lombok.Builder;
+import lombok.Data;
 
-@Builder
-public record JwtResponse(
-        Long id,
-        String username,
-        String accessToken,
-        String refreshToken
-) {
+@Data
+public class JwtResponse {
+
+    private Long id;
+    private String username;
+    private String accessToken;
+    private String refreshToken;
+
 }

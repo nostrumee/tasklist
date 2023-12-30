@@ -41,6 +41,35 @@ public class ApplicationConfig {
     private final MinioProperties minioProperties;
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            final AuthenticationConfiguration configuration
+    ) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler expressionHandler() {
+        DefaultMethodSecurityExpressionHandler expressionHandler
+                = new CustomSecurityExceptionHandler();
+        expressionHandler.setApplicationContext(applicationContext);
+        return expressionHandler;
+    }
+
+    @Bean
+    public MinioClient minioClient() {
+        return MinioClient.builder()
+                .endpoint(minioProperties.getUrl())
+                .credentials(minioProperties.getAccessKey(),
+                        minioProperties.getSecretKey())
+                .build();
+    }
+
+    @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement()
@@ -59,32 +88,6 @@ public class ApplicationConfig {
                         .description("Demo Spring Boot application")
                         .version("1.0")
                 );
-    }
-
-    @Bean
-    public MethodSecurityExpressionHandler expressionHandler() {
-        DefaultMethodSecurityExpressionHandler expressionHandler
-                = new CustomSecurityExceptionHandler();
-        expressionHandler.setApplicationContext(applicationContext);
-        return expressionHandler;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
-
-    @Bean
-    public MinioClient minioClient() {
-        return MinioClient.builder()
-                .endpoint(minioProperties.getUrl())
-                .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())
-                .build();
     }
 
     @Bean
@@ -135,4 +138,5 @@ public class ApplicationConfig {
 
         return httpSecurity.build();
     }
+
 }
