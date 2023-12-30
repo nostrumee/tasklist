@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReminderImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.service.impl</a> &gt; <span class="el_source">ReminderImpl.java</span></div><h1>ReminderImpl.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.service.impl;
+
+import by.edu.tasklist.domain.MailType;
+import by.edu.tasklist.domain.task.Task;
+import by.edu.tasklist.domain.user.User;
+import by.edu.tasklist.service.MailService;
+import by.edu.tasklist.service.Reminder;
+import by.edu.tasklist.service.TaskService;
+import by.edu.tasklist.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Properties;
+
+@Service
+<span class="nc" id="L19">@RequiredArgsConstructor</span>
+public class ReminderImpl implements Reminder {
+
+    private final TaskService taskService;
+    private final UserService userService;
+    private final MailService mailService;
+<span class="nc" id="L25">    private final Duration duration = Duration.ofHours(1);</span>
+
+    //    @Scheduled(cron = &quot;0 0 * * * *&quot;)
+    @Scheduled(cron = &quot;0 * * * * *&quot;)
+    @Override
+    public void remindForTask() {
+<span class="nc" id="L31">        List&lt;Task&gt; tasks = taskService.getAllSoonTasks(duration);</span>
+<span class="nc" id="L32">        tasks.forEach(task -&gt; {</span>
+<span class="nc" id="L33">            User user = userService.getTaskAuthor(task.getId());</span>
+<span class="nc" id="L34">            Properties properties = new Properties();</span>
+<span class="nc" id="L35">            properties.setProperty(&quot;task.title&quot;, task.getTitle());</span>
+<span class="nc" id="L36">            properties.setProperty(&quot;task.description&quot;, task.getDescription());</span>
+<span class="nc" id="L37">            mailService.sendEmail(user, MailType.REMINDER, properties);</span>
+<span class="nc" id="L38">        });</span>
+<span class="nc" id="L39">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

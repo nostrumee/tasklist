@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.service.impl</a> &gt; <span class="el_source">ImageServiceImpl.java</span></div><h1>ImageServiceImpl.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.service.impl;
+
+import by.edu.tasklist.domain.exception.ImageUploadException;
+import by.edu.tasklist.domain.task.TaskImage;
+import by.edu.tasklist.service.ImageService;
+import by.edu.tasklist.service.props.MinioProperties;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.InputStream;
+import java.util.UUID;
+
+@Service
+<span class="fc" id="L20">@RequiredArgsConstructor</span>
+public class ImageServiceImpl implements ImageService {
+
+    private final MinioClient minioClient;
+    private final MinioProperties minioProperties;
+
+    @Override
+    public String upload(final TaskImage image) {
+        try {
+<span class="nc" id="L29">            createBucket();</span>
+<span class="nc" id="L30">        } catch (Exception e) {</span>
+<span class="nc" id="L31">            throw new ImageUploadException(&quot;Image upload failed: &quot;</span>
+<span class="nc" id="L32">                    + e.getMessage());</span>
+<span class="nc" id="L33">        }</span>
+<span class="nc" id="L34">        MultipartFile file = image.getFile();</span>
+<span class="nc bnc" id="L35" title="All 4 branches missed.">        if (file.isEmpty() || file.getOriginalFilename() == null) {</span>
+<span class="nc" id="L36">            throw new ImageUploadException(&quot;Image must have name.&quot;);</span>
+        }
+<span class="nc" id="L38">        String fileName = generateFileName(file);</span>
+        InputStream inputStream;
+        try {
+<span class="nc" id="L41">            inputStream = file.getInputStream();</span>
+<span class="nc" id="L42">        } catch (Exception e) {</span>
+<span class="nc" id="L43">            throw new ImageUploadException(&quot;Image upload failed: &quot;</span>
+<span class="nc" id="L44">                    + e.getMessage());</span>
+<span class="nc" id="L45">        }</span>
+<span class="nc" id="L46">        saveImage(inputStream, fileName);</span>
+<span class="nc" id="L47">        return fileName;</span>
+    }
+
+<span class="nc" id="L50">    @SneakyThrows</span>
+    private void createBucket() {
+<span class="nc" id="L52">        boolean found = minioClient.bucketExists(BucketExistsArgs.builder()</span>
+<span class="nc" id="L53">                .bucket(minioProperties.getBucket())</span>
+<span class="nc" id="L54">                .build());</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (!found) {</span>
+<span class="nc" id="L56">            minioClient.makeBucket(MakeBucketArgs.builder()</span>
+<span class="nc" id="L57">                    .bucket(minioProperties.getBucket())</span>
+<span class="nc" id="L58">                    .build());</span>
+        }
+<span class="nc" id="L60">    }</span>
+
+    private String generateFileName(final MultipartFile file) {
+<span class="nc" id="L63">        String extension = getExtension(file);</span>
+<span class="nc" id="L64">        return UUID.randomUUID() + &quot;.&quot; + extension;</span>
+    }
+
+    private String getExtension(final MultipartFile file) {
+<span class="nc" id="L68">        return file.getOriginalFilename()</span>
+<span class="nc" id="L69">                .substring(file.getOriginalFilename().lastIndexOf(&quot;.&quot;) + 1);</span>
+    }
+
+<span class="nc" id="L72">    @SneakyThrows</span>
+    private void saveImage(final InputStream inputStream,
+                           final String fileName) {
+<span class="nc" id="L75">        minioClient.putObject(PutObjectArgs.builder()</span>
+<span class="nc" id="L76">                .stream(inputStream, inputStream.available(), -1)</span>
+<span class="nc" id="L77">                .bucket(minioProperties.getBucket())</span>
+<span class="nc" id="L78">                .object(fileName)</span>
+<span class="nc" id="L79">                .build());</span>
+<span class="nc" id="L80">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.web.dto.task</a> &gt; <span class="el_source">TaskDto.java</span></div><h1>TaskDto.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.web.dto.task;
+
+import by.edu.tasklist.domain.task.Status;
+import by.edu.tasklist.web.dto.validation.OnCreate;
+import by.edu.tasklist.web.dto.validation.OnUpdate;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import org.hibernate.validator.constraints.Length;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+<span class="nc bnc" id="L16" title="All 54 branches missed.">@Data</span>
+public class TaskDto {
+
+    @NotNull(message = &quot;Id must be not null.&quot;, groups = OnUpdate.class)
+<span class="nc" id="L20">    private Long id;</span>
+
+    @NotNull(message = &quot;Title must be not null.&quot;,
+            groups = {OnCreate.class, OnUpdate.class})
+    @Length(max = 255,
+            message = &quot;Title length must be smaller than 255 symbols.&quot;,
+            groups = {OnCreate.class, OnUpdate.class})
+<span class="nc" id="L27">    private String title;</span>
+
+    @Length(max = 255,
+            message = &quot;Description length must be smaller than 255 symbols.&quot;,
+            groups = {OnCreate.class, OnUpdate.class})
+<span class="nc" id="L32">    private String description;</span>
+
+<span class="nc" id="L34">    private Status status;</span>
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = &quot;yyyy-MM-dd HH:mm&quot;)
+<span class="nc" id="L38">    private LocalDateTime expirationDate;</span>
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+<span class="nc" id="L41">    private List&lt;String&gt; images;</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

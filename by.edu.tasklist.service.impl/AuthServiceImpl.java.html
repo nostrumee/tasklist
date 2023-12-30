@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.service.impl</a> &gt; <span class="el_source">AuthServiceImpl.java</span></div><h1>AuthServiceImpl.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.service.impl;
+
+import by.edu.tasklist.domain.user.User;
+import by.edu.tasklist.service.AuthService;
+import by.edu.tasklist.service.UserService;
+import by.edu.tasklist.web.dto.auth.JwtRequest;
+import by.edu.tasklist.web.dto.auth.JwtResponse;
+import by.edu.tasklist.web.security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.stereotype.Service;
+
+@Service
+<span class="fc" id="L15">@RequiredArgsConstructor</span>
+public class AuthServiceImpl implements AuthService {
+
+    private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Override
+    public JwtResponse login(final JwtRequest loginRequest) {
+<span class="fc" id="L24">        JwtResponse jwtResponse = new JwtResponse();</span>
+<span class="fc" id="L25">        authenticationManager.authenticate(</span>
+                new UsernamePasswordAuthenticationToken(
+<span class="fc" id="L27">                        loginRequest.getUsername(), loginRequest.getPassword())</span>
+                );
+<span class="fc" id="L29">        User user = userService.getByUsername(loginRequest.getUsername());</span>
+<span class="fc" id="L30">        jwtResponse.setId(user.getId());</span>
+<span class="fc" id="L31">        jwtResponse.setUsername(user.getUsername());</span>
+<span class="fc" id="L32">        jwtResponse.setAccessToken(jwtTokenProvider.createAccessToken(</span>
+<span class="fc" id="L33">                user.getId(), user.getUsername(), user.getRoles())</span>
+        );
+<span class="fc" id="L35">        jwtResponse.setRefreshToken(jwtTokenProvider.createRefreshToken(</span>
+<span class="fc" id="L36">                user.getId(), user.getUsername())</span>
+        );
+<span class="fc" id="L38">        return jwtResponse;</span>
+    }
+
+    @Override
+    public JwtResponse refresh(final String refreshToken) {
+<span class="fc" id="L43">        return jwtTokenProvider.refreshUserTokens(refreshToken);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

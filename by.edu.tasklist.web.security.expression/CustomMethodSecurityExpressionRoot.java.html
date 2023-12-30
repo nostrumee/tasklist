@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomMethodSecurityExpressionRoot.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.web.security.expression</a> &gt; <span class="el_source">CustomMethodSecurityExpressionRoot.java</span></div><h1>CustomMethodSecurityExpressionRoot.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.web.security.expression;
+
+import by.edu.tasklist.domain.user.Role;
+import by.edu.tasklist.service.UserService;
+import by.edu.tasklist.web.security.JwtEntity;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.security.access.expression.SecurityExpressionRoot;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+<span class="nc" id="L15">@Setter</span>
+@Getter
+public class CustomMethodSecurityExpressionRoot
+        extends SecurityExpressionRoot
+        implements MethodSecurityExpressionOperations {
+
+<span class="nc" id="L21">    private Object filterObject;</span>
+<span class="nc" id="L22">    private Object returnObject;</span>
+<span class="nc" id="L23">    private Object target;</span>
+<span class="nc" id="L24">    private HttpServletRequest request;</span>
+
+<span class="nc" id="L26">    private UserService userService;</span>
+
+    public CustomMethodSecurityExpressionRoot(
+            final Authentication authentication
+    ) {
+<span class="nc" id="L31">        super(authentication);</span>
+<span class="nc" id="L32">    }</span>
+
+    public boolean canAccessUser(final Long id) {
+<span class="nc" id="L35">        Authentication authentication = SecurityContextHolder.getContext()</span>
+<span class="nc" id="L36">                .getAuthentication();</span>
+
+<span class="nc" id="L38">        JwtEntity user = (JwtEntity) authentication.getPrincipal();</span>
+<span class="nc" id="L39">        Long userId = user.getId();</span>
+
+<span class="nc bnc" id="L41" title="All 4 branches missed.">        return userId.equals(id) || hasAnyRole(authentication, Role.ROLE_ADMIN);</span>
+    }
+
+    private boolean hasAnyRole(final Authentication authentication,
+                               final Role... roles) {
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        for (Role role : roles) {</span>
+<span class="nc" id="L47">            SimpleGrantedAuthority authority</span>
+<span class="nc" id="L48">                    = new SimpleGrantedAuthority(role.name());</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">            if (authentication.getAuthorities().contains(authority)) {</span>
+<span class="nc" id="L50">                return true;</span>
+            }
+        }
+<span class="nc" id="L53">        return false;</span>
+    }
+
+    public boolean canAccessTask(final Long taskId) {
+<span class="nc" id="L57">        Authentication authentication = SecurityContextHolder.getContext()</span>
+<span class="nc" id="L58">                .getAuthentication();</span>
+
+<span class="nc" id="L60">        JwtEntity user = (JwtEntity) authentication.getPrincipal();</span>
+<span class="nc" id="L61">        Long id = user.getId();</span>
+
+<span class="nc" id="L63">        return userService.isTaskOwner(id, taskId);</span>
+    }
+
+    @Override
+    public Object getThis() {
+<span class="nc" id="L68">        return target;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

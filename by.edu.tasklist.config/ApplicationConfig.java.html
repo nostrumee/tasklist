@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.config</a> &gt; <span class="el_source">ApplicationConfig.java</span></div><h1>ApplicationConfig.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.config;
+
+import by.edu.tasklist.service.props.MinioProperties;
+import by.edu.tasklist.web.security.JwtTokenFilter;
+import by.edu.tasklist.web.security.JwtTokenProvider;
+import by.edu.tasklist.web.security.expression.CustomSecurityExceptionHandler;
+import io.minio.MinioClient;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+<span class="nc" id="L36">@RequiredArgsConstructor(onConstructor = @__(@Lazy))</span>
+public class ApplicationConfig {
+
+    private final JwtTokenProvider tokenProvider;
+    private final ApplicationContext applicationContext;
+    private final MinioProperties minioProperties;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+<span class="nc" id="L45">        return new BCryptPasswordEncoder();</span>
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            final AuthenticationConfiguration configuration
+    ) throws Exception {
+<span class="nc" id="L52">        return configuration.getAuthenticationManager();</span>
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler expressionHandler() {
+<span class="nc" id="L57">        DefaultMethodSecurityExpressionHandler expressionHandler</span>
+                = new CustomSecurityExceptionHandler();
+<span class="nc" id="L59">        expressionHandler.setApplicationContext(applicationContext);</span>
+<span class="nc" id="L60">        return expressionHandler;</span>
+    }
+
+    @Bean
+    public MinioClient minioClient() {
+<span class="nc" id="L65">        return MinioClient.builder()</span>
+<span class="nc" id="L66">                .endpoint(minioProperties.getUrl())</span>
+<span class="nc" id="L67">                .credentials(minioProperties.getAccessKey(),</span>
+<span class="nc" id="L68">                        minioProperties.getSecretKey())</span>
+<span class="nc" id="L69">                .build();</span>
+    }
+
+    @Bean
+    public OpenAPI openAPI() {
+<span class="nc" id="L74">        return new OpenAPI()</span>
+<span class="nc" id="L75">                .addSecurityItem(new SecurityRequirement()</span>
+<span class="nc" id="L76">                        .addList(&quot;bearerAuth&quot;))</span>
+<span class="nc" id="L77">                .components(</span>
+                        new Components()
+<span class="nc" id="L79">                                .addSecuritySchemes(&quot;bearerAuth&quot;,</span>
+                                        new SecurityScheme()
+<span class="nc" id="L81">                                                .type(SecurityScheme.Type.HTTP)</span>
+<span class="nc" id="L82">                                                .scheme(&quot;bearer&quot;)</span>
+<span class="nc" id="L83">                                                .bearerFormat(&quot;JWT&quot;)</span>
+                                )
+                )
+<span class="nc" id="L86">                .info(new Info()</span>
+<span class="nc" id="L87">                        .title(&quot;Task list API&quot;)</span>
+<span class="nc" id="L88">                        .description(&quot;Demo Spring Boot application&quot;)</span>
+<span class="nc" id="L89">                        .version(&quot;1.0&quot;)</span>
+                );
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(final HttpSecurity httpSecurity)
+            throws Exception {
+<span class="nc" id="L96">        httpSecurity</span>
+<span class="nc" id="L97">                .csrf(AbstractHttpConfigurer::disable)</span>
+<span class="nc" id="L98">                .cors(AbstractHttpConfigurer::disable)</span>
+<span class="nc" id="L99">                .httpBasic(AbstractHttpConfigurer::disable)</span>
+<span class="nc" id="L100">                .sessionManagement(sessionManagement -&gt;</span>
+<span class="nc" id="L101">                        sessionManagement</span>
+<span class="nc" id="L102">                                .sessionCreationPolicy(</span>
+                                        SessionCreationPolicy.STATELESS
+                                )
+                )
+<span class="nc" id="L106">                .exceptionHandling(configurer -&gt;</span>
+<span class="nc" id="L107">                        configurer.authenticationEntryPoint(</span>
+                                        (request, response, exception) -&gt; {
+<span class="nc" id="L109">                                            response.setStatus(</span>
+                                                    HttpStatus.UNAUTHORIZED
+<span class="nc" id="L111">                                                            .value()</span>
+                                            );
+<span class="nc" id="L113">                                            response.getWriter()</span>
+<span class="nc" id="L114">                                                    .write(&quot;Unauthorized.&quot;);</span>
+<span class="nc" id="L115">                                        })</span>
+<span class="nc" id="L116">                                .accessDeniedHandler(</span>
+                                        (request, response, exception) -&gt; {
+<span class="nc" id="L118">                                            response.setStatus(</span>
+                                                    HttpStatus.FORBIDDEN
+<span class="nc" id="L120">                                                            .value()</span>
+                                            );
+<span class="nc" id="L122">                                            response.getWriter()</span>
+<span class="nc" id="L123">                                                    .write(&quot;Unauthorized.&quot;);</span>
+<span class="nc" id="L124">                                        }))</span>
+<span class="nc" id="L125">                .authorizeHttpRequests(configurer -&gt;</span>
+<span class="nc" id="L126">                        configurer.requestMatchers(&quot;/api/v1/auth/**&quot;)</span>
+<span class="nc" id="L127">                                .permitAll()</span>
+<span class="nc" id="L128">                                .requestMatchers(&quot;/swagger-ui/**&quot;)</span>
+<span class="nc" id="L129">                                .permitAll()</span>
+<span class="nc" id="L130">                                .requestMatchers(&quot;/v3/api-docs/**&quot;)</span>
+<span class="nc" id="L131">                                .permitAll()</span>
+<span class="nc" id="L132">                                .requestMatchers(&quot;/graphiql&quot;)</span>
+<span class="nc" id="L133">                                .permitAll()</span>
+<span class="nc" id="L134">                                .anyRequest().authenticated())</span>
+<span class="nc" id="L135">                .anonymous(AbstractHttpConfigurer::disable)</span>
+<span class="nc" id="L136">                .addFilterBefore(new JwtTokenFilter(tokenProvider),</span>
+                        UsernamePasswordAuthenticationFilter.class);
+
+<span class="nc" id="L139">        return httpSecurity.build();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

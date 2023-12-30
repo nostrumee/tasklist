@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.service.impl</a> &gt; <span class="el_source">UserServiceImpl.java</span></div><h1>UserServiceImpl.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.service.impl;
+
+import by.edu.tasklist.domain.MailType;
+import by.edu.tasklist.domain.exception.ResourceNotFoundException;
+import by.edu.tasklist.domain.user.Role;
+import by.edu.tasklist.domain.user.User;
+import by.edu.tasklist.repository.UserRepository;
+import by.edu.tasklist.service.MailService;
+import by.edu.tasklist.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Properties;
+import java.util.Set;
+
+@Service
+<span class="fc" id="L23">@RequiredArgsConstructor</span>
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;UserService::getById&quot;, key = &quot;#id&quot;)
+    public User getById(final Long id) {
+<span class="fc" id="L34">        return userRepository.findById(id)</span>
+<span class="fc" id="L35">                .orElseThrow(() -&gt;</span>
+<span class="fc" id="L36">                        new ResourceNotFoundException(&quot;User not found.&quot;));</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;UserService::getByUsername&quot;, key = &quot;#username&quot;)
+    public User getByUsername(final String username) {
+<span class="fc" id="L43">        return userRepository.findByUsername(username)</span>
+<span class="fc" id="L44">                .orElseThrow(() -&gt;</span>
+<span class="fc" id="L45">                        new ResourceNotFoundException(&quot;User not found.&quot;));</span>
+    }
+
+    @Override
+    @Transactional
+    @Caching(put = {
+            @CachePut(value = &quot;UserService::getById&quot;,
+                    key = &quot;#user.id&quot;),
+            @CachePut(value = &quot;UserService::getByUsername&quot;,
+                    key = &quot;#user.username&quot;)
+    })
+    public User update(final User user) {
+<span class="fc" id="L57">        User existing = getById(user.getId());</span>
+<span class="fc" id="L58">        existing.setName(user.getName());</span>
+<span class="fc" id="L59">        user.setUsername(user.getUsername());</span>
+<span class="fc" id="L60">        user.setPassword(passwordEncoder.encode(user.getPassword()));</span>
+<span class="fc" id="L61">        userRepository.save(user);</span>
+<span class="fc" id="L62">        return user;</span>
+    }
+
+    @Override
+    @Transactional
+    @Caching(cacheable = {
+            @Cacheable(value = &quot;UserService::getById&quot;,
+                    condition = &quot;#user.id!=null&quot;,
+                    key = &quot;#user.id&quot;),
+            @Cacheable(value = &quot;UserService::getByUsername&quot;,
+                    condition = &quot;#user.username!=null&quot;,
+                    key = &quot;#user.username&quot;)
+    })
+    public User create(final User user) {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (userRepository.findByUsername(user.getUsername()).isPresent()) {</span>
+<span class="fc" id="L77">            throw new IllegalStateException(&quot;User already exists.&quot;);</span>
+        }
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (!user.getPassword().equals(user.getPasswordConfirmation())) {</span>
+<span class="fc" id="L80">            throw new IllegalStateException(</span>
+                    &quot;Password and password confirmation do not match.&quot;
+            );
+        }
+<span class="fc" id="L84">        user.setPassword(passwordEncoder.encode(user.getPassword()));</span>
+<span class="fc" id="L85">        Set&lt;Role&gt; roles = Set.of(Role.ROLE_USER);</span>
+<span class="fc" id="L86">        user.setRoles(roles);</span>
+<span class="fc" id="L87">        userRepository.save(user);</span>
+<span class="fc" id="L88">        mailService.sendEmail(user, MailType.REGISTRATION, new Properties());</span>
+<span class="fc" id="L89">        return user;</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;UserService::isTaskOwner&quot;,
+            key = &quot;#userId + '.' + #taskId&quot;)
+    public boolean isTaskOwner(final Long userId, final Long taskId) {
+<span class="fc" id="L97">        return userRepository.isTaskOwner(userId, taskId);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;UserService::getTaskAuthor&quot;,
+            key = &quot;#taskId&quot;)
+    public User getTaskAuthor(final Long taskId) {
+<span class="fc" id="L105">        return userRepository.findTaskAuthor(taskId)</span>
+<span class="fc" id="L106">                .orElseThrow(() -&gt;</span>
+<span class="fc" id="L107">                        new ResourceNotFoundException(&quot;User not found.&quot;));</span>
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = &quot;UserService::getById&quot;, key = &quot;#id&quot;)
+    public void delete(final Long id) {
+<span class="fc" id="L114">        userRepository.deleteById(id);</span>
+<span class="fc" id="L115">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

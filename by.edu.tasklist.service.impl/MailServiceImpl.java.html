@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MailServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tasklist</a> &gt; <a href="index.source.html" class="el_package">by.edu.tasklist.service.impl</a> &gt; <span class="el_source">MailServiceImpl.java</span></div><h1>MailServiceImpl.java</h1><pre class="source lang-java linenums">package by.edu.tasklist.service.impl;
+
+import by.edu.tasklist.domain.MailType;
+import by.edu.tasklist.domain.user.User;
+import by.edu.tasklist.service.MailService;
+import freemarker.template.Configuration;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+@Service
+<span class="fc" id="L20">@RequiredArgsConstructor</span>
+public class MailServiceImpl implements MailService {
+
+    private final Configuration configuration;
+    private final JavaMailSender mailSender;
+
+    @Override
+    public void sendEmail(final User user,
+                          final MailType type,
+                          final Properties params) {
+<span class="pc bpc" id="L30" title="1 of 3 branches missed.">        switch (type) {</span>
+<span class="fc" id="L31">            case REGISTRATION -&gt; sendRegistrationEmail(user, params);</span>
+<span class="fc" id="L32">            case REMINDER -&gt; sendReminderEmail(user, params);</span>
+            default -&gt; {
+            }
+        }
+<span class="fc" id="L36">    }</span>
+
+<span class="pc" id="L38">    @SneakyThrows</span>
+    private void sendRegistrationEmail(final User user,
+                                       final Properties params) {
+<span class="fc" id="L41">        MimeMessage mimeMessage = mailSender.createMimeMessage();</span>
+<span class="fc" id="L42">        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage,</span>
+                false,
+                &quot;UTF-8&quot;);
+<span class="fc" id="L45">        helper.setSubject(&quot;Thank you for registration, &quot; + user.getName());</span>
+<span class="fc" id="L46">        helper.setTo(user.getUsername());</span>
+<span class="fc" id="L47">        String emailContent = getRegistrationEmailContent(user, params);</span>
+<span class="fc" id="L48">        helper.setText(emailContent, true);</span>
+<span class="fc" id="L49">        mailSender.send(mimeMessage);</span>
+<span class="fc" id="L50">    }</span>
+
+<span class="pc" id="L52">    @SneakyThrows</span>
+    private void sendReminderEmail(final User user, final Properties params) {
+<span class="fc" id="L54">        MimeMessage mimeMessage = mailSender.createMimeMessage();</span>
+<span class="fc" id="L55">        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage,</span>
+                false,
+                &quot;UTF-8&quot;);
+<span class="fc" id="L58">        helper.setSubject(&quot;You have task to do in 1 hour&quot;);</span>
+<span class="fc" id="L59">        helper.setTo(user.getUsername());</span>
+<span class="fc" id="L60">        String emailContent = getReminderEmailContent(user, params);</span>
+<span class="fc" id="L61">        helper.setText(emailContent, true);</span>
+<span class="fc" id="L62">        mailSender.send(mimeMessage);</span>
+<span class="fc" id="L63">    }</span>
+
+<span class="nc" id="L65">    @SneakyThrows</span>
+    private String getRegistrationEmailContent(final User user,
+                                               final Properties properties) {
+<span class="fc" id="L68">        StringWriter writer = new StringWriter();</span>
+<span class="fc" id="L69">        Map&lt;String, Object&gt; model = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L70">        model.put(&quot;name&quot;, user.getName());</span>
+<span class="fc" id="L71">        configuration.getTemplate(&quot;register.ftlh&quot;)</span>
+<span class="fc" id="L72">                .process(model, writer);</span>
+<span class="fc" id="L73">        return writer.getBuffer().toString();</span>
+    }
+
+<span class="nc" id="L76">    @SneakyThrows</span>
+    private String getReminderEmailContent(final User user,
+                                           final Properties properties) {
+<span class="fc" id="L79">        StringWriter writer = new StringWriter();</span>
+<span class="fc" id="L80">        Map&lt;String, Object&gt; model = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L81">        model.put(&quot;name&quot;, user.getName());</span>
+<span class="fc" id="L82">        model.put(&quot;title&quot;, properties.getProperty(&quot;task.title&quot;));</span>
+<span class="fc" id="L83">        model.put(&quot;description&quot;, properties.getProperty(&quot;task.description&quot;));</span>
+<span class="fc" id="L84">        configuration.getTemplate(&quot;reminder.ftlh&quot;)</span>
+<span class="fc" id="L85">                .process(model, writer);</span>
+<span class="fc" id="L86">        return writer.getBuffer().toString();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
